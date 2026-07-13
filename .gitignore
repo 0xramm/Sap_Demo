@@ -1,0 +1,5 @@
+node_modules/
+db/access-portal.sqlite
+.env
+gen/
+.cds-services.json

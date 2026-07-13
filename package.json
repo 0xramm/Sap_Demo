@@ -1,0 +1,20 @@
+{
+  "name": "access-portal",
+  "version": "1.0.0",
+  "description": "Simple SAP BTP/CAP access-provisioning portal (employee requests -> manager approves -> Discord invite emailed)",
+  "main": "index.js",
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@cap-js/sqlite": "^3.0.2",
+    "@sap/cds": "^10.0.3",
+    "@sap/cds-dk": "^10.0.4",
+    "nodemailer": "^9.0.3",
+    "sqlite3": "^6.0.1"
+  }
+}
