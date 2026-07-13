@@ -9,11 +9,11 @@ annotate service.AccessRequests with @(
   },
 
   UI.LineItem: [
-    { Value: employee_ID, Label: 'Employee' },
-    { Value: service_ID,  Label: 'Service' },
-    { Value: status,      Label: 'Status' },
-    { Value: createdAt,   Label: 'Requested On' },
-    { Value: decidedAt,   Label: 'Decided On' }
+    { Value: employee.name, Label: 'Employee' },
+    { Value: service.name,  Label: 'Service' },
+    { Value: status,        Label: 'Status' },
+    { Value: createdAt,     Label: 'Requested On' },
+    { Value: decidedAt,     Label: 'Decided On' }
   ],
 
   UI.Facets: [

@@ -50,7 +50,8 @@ That's exactly what's in this folder. Read on.
 ```
 access-portal/
 ├── app/
-│   └── approvals/            ← real, standalone UI5/Fiori Elements app (see below)
+│   ├── approvals/             ← manager-facing Fiori Elements app (list report + approve/reject)
+│   └── request-portal/        ← employee-facing freestyle UI5 app (submit + track requests)
 ├── db/
 │   ├── schema.cds          ← data model: Employees, Managers, Services, AccessRequests
 │   └── data/*.csv          ← seed data (one manager, one employee, "Discord" as a service)
@@ -97,7 +98,11 @@ You'll see `server listening on http://localhost:4004`. Then:
      `http://localhost:4004/approvals/webapp/index.html`
 
      I generated this with `@sap-ux/fiori-elements-writer` — the same library BAS's "Fiori Application Generator" wizard uses under the hood — pointed at this project's live `$metadata`. It needs no separate `npm install` or dev server: `manifest.json`'s data source is a relative path (`/access-portal/`), so as long as `cds watch` is running, both the API and the UI are served from the same origin and it just works. Open `app/approvals/webapp/` in your editor to see real UI5 project files — `Component.js`, the routing config in `manifest.json`, the (empty, since annotations already live in the CDS layer) local `annotations/annotation.xml`. This is the folder you'd hand to `cf push`/MTA later as its own deployable HTML5 module, separate from the `srv` module.
-- **Submit a request** (simulating the employee screen) via curl or Postman:
+- **Submit a request** — now two ways:
+  1. **The employee UI** (`app/request-portal` — a small freestyle UI5 app, not Fiori elements, since submitting goes through the `submitRequest` action rather than a plain entity create):
+     `http://localhost:4004/request-portal/webapp/index.html`
+     Fill in your name, email, pick a service, optionally add a reason, click **Submit Request**. Enter the same email again and click **Refresh** under "My Requests" to see its status update once a manager decides on it.
+  2. **curl/Postman**, simulating the same screen:
   ```bash
   curl -X POST http://localhost:4004/access-portal/submitRequest \
     -H "Content-Type: application/json" \

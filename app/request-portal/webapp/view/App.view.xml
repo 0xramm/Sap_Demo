@@ -1,0 +1,64 @@
+<mvc:View
+    controllerName="accessportal.requestportal.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:core="sap.ui.core"
+    xmlns:f="sap.ui.layout.form"
+    xmlns="sap.m"
+    displayBlock="true">
+    <Page title="{i18n>appTitle}" busy="{app>/busy}" busyIndicatorDelay="0">
+        <content>
+            <f:SimpleForm
+                editable="true"
+                layout="ResponsiveGridLayout"
+                labelSpanXL="3" labelSpanL="3" labelSpanM="3" labelSpanS="12"
+                class="sapUiContentPadding">
+                <core:Title text="New Access Request"/>
+
+                <Label text="Your Name"/>
+                <Input id="nameInput" value="{app>/employeeName}" placeholder="e.g. Arun Employee"/>
+
+                <Label text="Your Email" required="true"/>
+                <Input id="emailInput" type="Email" value="{app>/employeeEmail}" placeholder="you@example.com"/>
+
+                <Label text="Service" required="true"/>
+                <Select id="serviceSelect" selectedKey="{app>/serviceName}" items="{app>/services}" forceSelection="false" width="100%">
+                    <core:Item key="{app>name}" text="{app>name}"/>
+                </Select>
+
+                <Label text="Reason"/>
+                <TextArea id="reasonInput" value="{app>/reason}" rows="3" width="100%" placeholder="Why do you need access?"/>
+            </f:SimpleForm>
+
+            <Toolbar class="sapUiSmallMarginBeginEnd">
+                <ToolbarSpacer/>
+                <Button text="Submit Request" type="Emphasized" press="onSubmit"/>
+            </Toolbar>
+
+            <Title text="My Requests" level="H3" class="sapUiSmallMarginTop sapUiSmallMarginBegin"/>
+            <Toolbar class="sapUiTinyMarginBegin">
+                <Text text="Enter your email above, then:"/>
+                <ToolbarSpacer/>
+                <Button text="Refresh" icon="sap-icon://refresh" press="onRefreshMyRequests"/>
+            </Toolbar>
+
+            <Table id="myRequestsTable" items="{app>/myRequests}" noDataText="No requests yet - submit one above." class="sapUiSmallMarginBeginEnd">
+                <columns>
+                    <Column><Text text="Service"/></Column>
+                    <Column><Text text="Status"/></Column>
+                    <Column><Text text="Reason"/></Column>
+                    <Column><Text text="Requested On"/></Column>
+                </columns>
+                <items>
+                    <ColumnListItem>
+                        <cells>
+                            <Text text="{app>service/name}"/>
+                            <ObjectStatus text="{app>status}" state="{path: 'app>status', formatter: '.formatStatusState'}"/>
+                            <Text text="{app>reason}"/>
+                            <Text text="{app>requestedOnDisplay}"/>
+                        </cells>
+                    </ColumnListItem>
+                </items>
+            </Table>
+        </content>
+    </Page>
+</mvc:View>
