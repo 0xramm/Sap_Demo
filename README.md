@@ -49,6 +49,8 @@ That's exactly what's in this folder. Read on.
 
 ```
 access-portal/
+├── app/
+│   └── approvals/            ← real, standalone UI5/Fiori Elements app (see below)
 ├── db/
 │   ├── schema.cds          ← data model: Employees, Managers, Services, AccessRequests
 │   └── data/*.csv          ← seed data (one manager, one employee, "Discord" as a service)
@@ -88,8 +90,13 @@ npx cds watch
 You'll see `server listening on http://localhost:4004`. Then:
 
 - **See the data / try the API:** open `http://localhost:4004` — CAP lists every entity and service.
-- **See the Fiori Elements UI** (this is the real deal — a List Report + Object Page, generated purely from the annotations in `access-portal-service-ui.cds`, no manual UI code):
-  `http://localhost:4004/$fiori-preview/AccessPortalService/AccessRequests`
+- **See the Fiori Elements UI** — two ways to view it:
+  1. **Live preview** (generated on the fly from the annotations in `access-portal-service-ui.cds`, no separate app project):
+     `http://localhost:4004/$fiori-preview/AccessPortalService/AccessRequests`
+  2. **`app/approvals`** — an actual, standalone UI5/Fiori Elements project (real `manifest.json`, `Component.js`, routing config — the same output SAP's own tooling in BAS would generate), open it at:
+     `http://localhost:4004/approvals/webapp/index.html`
+
+     I generated this with `@sap-ux/fiori-elements-writer` — the same library BAS's "Fiori Application Generator" wizard uses under the hood — pointed at this project's live `$metadata`. It needs no separate `npm install` or dev server: `manifest.json`'s data source is a relative path (`/access-portal/`), so as long as `cds watch` is running, both the API and the UI are served from the same origin and it just works. Open `app/approvals/webapp/` in your editor to see real UI5 project files — `Component.js`, the routing config in `manifest.json`, the (empty, since annotations already live in the CDS layer) local `annotations/annotation.xml`. This is the folder you'd hand to `cf push`/MTA later as its own deployable HTML5 module, separate from the `srv` module.
 - **Submit a request** (simulating the employee screen) via curl or Postman:
   ```bash
   curl -X POST http://localhost:4004/access-portal/submitRequest \

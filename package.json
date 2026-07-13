@@ -16,5 +16,8 @@
     "@sap/cds-dk": "^10.0.4",
     "nodemailer": "^9.0.3",
     "sqlite3": "^6.0.1"
-  }
+  },
+  "sapux": [
+    "app/approvals"
+  ]
 }
