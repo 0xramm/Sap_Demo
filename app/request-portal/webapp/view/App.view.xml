@@ -2,63 +2,57 @@
     controllerName="accessportal.requestportal.controller.App"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns:core="sap.ui.core"
-    xmlns:f="sap.ui.layout.form"
     xmlns="sap.m"
     displayBlock="true">
     <Page title="{i18n>appTitle}" busy="{app>/busy}" busyIndicatorDelay="0">
         <content>
-            <f:SimpleForm
-                editable="true"
-                layout="ResponsiveGridLayout"
-                labelSpanXL="3" labelSpanL="3" labelSpanM="3" labelSpanS="12"
-                class="sapUiContentPadding">
-                <core:Title text="New Access Request"/>
+            <VBox class="sapUiContentPadding" width="100%">
 
-                <Label text="Your Name"/>
-                <Input id="nameInput" value="{app>/employeeName}" placeholder="e.g. Arun Employee"/>
+                <Title text="New Access Request" level="H2" class="sapUiSmallMarginBottom"/>
 
-                <Label text="Your Email" required="true"/>
-                <Input id="emailInput" type="Email" value="{app>/employeeEmail}" placeholder="you@example.com"/>
+                <Label text="Your Name" labelFor="nameInput"/>
+                <Input id="nameInput" value="{app>/employeeName}" placeholder="e.g. Arun Employee" class="sapUiTinyMarginBottom"/>
 
-                <Label text="Service" required="true"/>
-                <Select id="serviceSelect" selectedKey="{app>/serviceName}" items="{app>/services}" forceSelection="false" width="100%">
+                <Label text="Your Email" required="true" labelFor="emailInput"/>
+                <Input id="emailInput" type="Email" value="{app>/employeeEmail}" placeholder="you@example.com" class="sapUiTinyMarginBottom"/>
+
+                <Label text="Service" required="true" labelFor="serviceSelect"/>
+                <Select id="serviceSelect" selectedKey="{app>/serviceName}" items="{app>/services}" forceSelection="false" class="sapUiTinyMarginBottom">
                     <core:Item key="{app>name}" text="{app>name}"/>
                 </Select>
 
-                <Label text="Reason"/>
-                <TextArea id="reasonInput" value="{app>/reason}" rows="3" width="100%" placeholder="Why do you need access?"/>
-            </f:SimpleForm>
+                <Label text="Reason" labelFor="reasonInput"/>
+                <TextArea id="reasonInput" value="{app>/reason}" rows="3" width="100%" placeholder="Why do you need access?" class="sapUiSmallMarginBottom"/>
 
-            <Toolbar class="sapUiSmallMarginBeginEnd">
-                <ToolbarSpacer/>
-                <Button text="Submit Request" type="Emphasized" press="onSubmit"/>
-            </Toolbar>
+                <Button text="Submit Request" type="Emphasized" press="onSubmit" class="sapUiSmallMarginTop"/>
 
-            <Title text="My Requests" level="H3" class="sapUiSmallMarginTop sapUiSmallMarginBegin"/>
-            <Toolbar class="sapUiTinyMarginBegin">
-                <Text text="Enter your email above, then:"/>
-                <ToolbarSpacer/>
-                <Button text="Refresh" icon="sap-icon://refresh" press="onRefreshMyRequests"/>
-            </Toolbar>
+                <Title text="My Requests" level="H3" class="sapUiLargeMarginTop sapUiSmallMarginBottom"/>
+                <Toolbar>
+                    <Text text="Enter your email above, then:"/>
+                    <ToolbarSpacer/>
+                    <Button text="Refresh" icon="sap-icon://refresh" press="onRefreshMyRequests"/>
+                </Toolbar>
 
-            <Table id="myRequestsTable" items="{app>/myRequests}" noDataText="No requests yet - submit one above." class="sapUiSmallMarginBeginEnd">
-                <columns>
-                    <Column><Text text="Service"/></Column>
-                    <Column><Text text="Status"/></Column>
-                    <Column><Text text="Reason"/></Column>
-                    <Column><Text text="Requested On"/></Column>
-                </columns>
-                <items>
-                    <ColumnListItem>
-                        <cells>
-                            <Text text="{app>service/name}"/>
-                            <ObjectStatus text="{app>status}" state="{path: 'app>status', formatter: '.formatStatusState'}"/>
-                            <Text text="{app>reason}"/>
-                            <Text text="{app>requestedOnDisplay}"/>
-                        </cells>
-                    </ColumnListItem>
-                </items>
-            </Table>
+                <Table id="myRequestsTable" items="{app>/myRequests}" noDataText="No requests yet - submit one above.">
+                    <columns>
+                        <Column><Text text="Service"/></Column>
+                        <Column><Text text="Status"/></Column>
+                        <Column><Text text="Reason"/></Column>
+                        <Column><Text text="Requested On"/></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <Text text="{app>service/name}"/>
+                                <ObjectStatus text="{app>status}" state="{path: 'app>status', formatter: '.formatStatusState'}"/>
+                                <Text text="{app>reason}"/>
+                                <Text text="{app>requestedOnDisplay}"/>
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+
+            </VBox>
         </content>
     </Page>
 </mvc:View>
