@@ -1,15 +1,12 @@
-sap.ui.define([
-  "sap/ui/core/UIComponent"
-], function (UIComponent) {
-  "use strict";
+sap.ui.define(
+    ["sap/fe/core/AppComponent"],
+    function (Component) {
+        "use strict";
 
-  return UIComponent.extend("accessportal.requestportal.Component", {
-    metadata: {
-      manifest: "json"
-    },
-
-    init: function () {
-      UIComponent.prototype.init.apply(this, arguments);
+        return Component.extend("accessportal.requestportal.Component", {
+            metadata: {
+                manifest: "json"
+            }
+        });
     }
-  });
-});
+);

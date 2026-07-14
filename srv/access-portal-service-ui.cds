@@ -8,6 +8,12 @@ annotate service.AccessRequests with @(
     Description   : { Value: reason }
   },
 
+  UI.SelectionFields: [
+    status,
+    employee_ID,
+    service_ID
+  ],
+
   UI.LineItem: [
     { Value: employee.name, Label: 'Employee' },
     { Value: service.name,  Label: 'Service' },
@@ -36,6 +42,17 @@ annotate service.AccessRequests with @(
     { $Type: 'UI.DataFieldForAction', Action: 'AccessPortalService.declineRequest', Label: 'Reject'  }
   ]
 );
+
+// These are set by the approve/declineRequest actions, not typed in directly -
+// keeps the employee's "Create" form limited to just employee/service/reason,
+// and stops anyone editing a decision by hand instead of through the actions.
+annotate service.AccessRequests with {
+  status       @UI.ReadOnly;
+  decidedAt    @UI.ReadOnly;
+  decidedBy    @UI.ReadOnly;
+  inviteLink   @UI.ReadOnly;
+  decisionNote @UI.ReadOnly;
+};
 
 annotate service.Employees with {
   name @title: 'Name';

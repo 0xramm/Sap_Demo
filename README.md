@@ -51,7 +51,7 @@ That's exactly what's in this folder. Read on.
 access-portal/
 ├── app/
 │   ├── approvals/             ← manager-facing Fiori Elements app (list report + approve/reject)
-│   └── request-portal/        ← employee-facing freestyle UI5 app (submit + track requests)
+│   └── request-portal/        ← employee-facing Fiori Elements app (create + track requests)
 ├── db/
 │   ├── schema.cds          ← data model: Employees, Managers, Services, AccessRequests
 │   └── data/*.csv          ← seed data (one manager, one employee, "Discord" as a service)
@@ -66,9 +66,13 @@ access-portal/
 └── package.json
 ```
 
-**How a request flows, end to end:**
-1. Employee calls `submitRequest` (email, name, service, reason) → a `Pending` `AccessRequests` row is created.
-2. Manager opens the Fiori preview, sees the pending list, opens one, clicks **Approve** or **Reject**.
+Both `app/approvals` and `app/request-portal` are **the same underlying technology** — both generated with `@sap-ux/fiori-elements-writer` (the same tool BAS's Fiori Application Generator wizard uses), both List Report + Object Page apps pointed at the same `AccessRequests` entity. The only real difference is intent: the employee app leans on Fiori Elements' built-in **Create** flow (a straight entity insert with value-help pickers for Employee/Service), while the manager app leans on the **Approve/Reject** buttons (the bound actions in `access-portal-service.js`). I annotated `status`, `decidedAt`, `decidedBy`, `inviteLink`, and `decisionNote` as `@UI.ReadOnly` so they don't show up as editable fields on the employee's Create form — those only change through the approve/decline actions, not by someone typing into them directly.
+
+**One trade-off worth knowing:** the original design had a `submitRequest` *action* that auto-created an Employee record from a typed-in email/name (so a brand-new employee could self-register in one step). Fiori Elements' native Create doesn't call custom actions — it inserts the entity directly — so now the employee picks themselves from a **value-help list of existing Employees** rather than typing their email freehand. `submitRequest` still exists and still works (see the curl example below, or call it from your own future UI) — it's just not what the generated Create button uses. If someone isn't in the Employees list yet, add them first via `http://localhost:4004/$fiori-preview/AccessPortalService/Employees` (zero extra code, same trick as the AccessRequests preview) — a proper "register yourself" self-service flow is a good next feature once you're comfortable with what's here.
+
+**How a request flows, end to end (via the UI):**
+1. Employee opens `app/request-portal`, clicks **Create**, picks themselves and a service via value help, adds a reason, saves → a `Pending` `AccessRequests` row is created.
+2. Manager opens `app/approvals`, sees the pending list, opens one, clicks **Approve** or **Reject**.
 3. `approve` handler: looks up the service → if it's "Discord", calls the Discord Bot REST API to mint a single-use, 7-day invite link → emails that link to the employee → marks the row `Approved`.
 4. `declineRequest` handler: marks the row `Rejected` and emails the employee why.
 
@@ -91,24 +95,17 @@ npx cds watch
 You'll see `server listening on http://localhost:4004`. Then:
 
 - **See the data / try the API:** open `http://localhost:4004` — CAP lists every entity and service.
-- **See the Fiori Elements UI** — two ways to view it:
-  1. **Live preview** (generated on the fly from the annotations in `access-portal-service-ui.cds`, no separate app project):
-     `http://localhost:4004/$fiori-preview/AccessPortalService/AccessRequests`
-  2. **`app/approvals`** — an actual, standalone UI5/Fiori Elements project (real `manifest.json`, `Component.js`, routing config — the same output SAP's own tooling in BAS would generate), open it at:
-     `http://localhost:4004/approvals/webapp/index.html`
-
-     I generated this with `@sap-ux/fiori-elements-writer` — the same library BAS's "Fiori Application Generator" wizard uses under the hood — pointed at this project's live `$metadata`. It needs no separate `npm install` or dev server: `manifest.json`'s data source is a relative path (`/access-portal/`), so as long as `cds watch` is running, both the API and the UI are served from the same origin and it just works. Open `app/approvals/webapp/` in your editor to see real UI5 project files — `Component.js`, the routing config in `manifest.json`, the (empty, since annotations already live in the CDS layer) local `annotations/annotation.xml`. This is the folder you'd hand to `cf push`/MTA later as its own deployable HTML5 module, separate from the `srv` module.
-- **Submit a request** — now two ways:
-  1. **The employee UI** (`app/request-portal` — a small freestyle UI5 app, not Fiori elements, since submitting goes through the `submitRequest` action rather than a plain entity create):
-     `http://localhost:4004/request-portal/webapp/index.html`
-     Fill in your name, email, pick a service, optionally add a reason, click **Submit Request**. Enter the same email again and click **Refresh** under "My Requests" to see its status update once a manager decides on it.
-  2. **curl/Postman**, simulating the same screen:
+- **The manager app:** `http://localhost:4004/approvals/webapp/index.html`
+- **The employee app:** `http://localhost:4004/request-portal/webapp/index.html` — click **Create**, pick yourself (Arun Employee, seeded by default) and "Discord" from the value-help pickers, add a reason, **Create**.
+- **Or simulate the employee screen via curl** (uses the `submitRequest` action instead, which also auto-creates the Employee record if the email doesn't exist yet):
   ```bash
   curl -X POST http://localhost:4004/access-portal/submitRequest \
     -H "Content-Type: application/json" \
     -d '{"employeeEmail":"you@example.com","employeeName":"You","serviceName":"Discord","reason":"testing"}'
   ```
-- Then go back to the Fiori preview, open that request, and click **Approve**. Watch the terminal — it'll log the "email" (invite link included) since no real SMTP/Discord credentials are set yet.
+- Then go to the manager app, open that request, and click **Approve**. Watch the terminal — it'll log the "email" (invite link included) since no real SMTP/Discord credentials are set yet.
+- There's also still a **live, code-free preview** for any entity, generated purely from annotations, no separate app project — handy for quickly checking `Employees`, `Services`, or `Managers` without generating a full app for each:
+  `http://localhost:4004/$fiori-preview/AccessPortalService/<EntityName>`
 
 Every restart reseeds fresh data from `db/data/*.csv` (SQLite is in-memory by default) — handy while you're experimenting, but it means nothing persists. When you're ready to keep data between restarts, tell CAP to use a file instead of memory (see comment in `package.json` — add a `cds.requires.db.credentials.url` pointing at a `.sqlite` file).
 
