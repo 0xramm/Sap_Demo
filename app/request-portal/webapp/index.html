@@ -9,7 +9,23 @@
         html, body, body > div, #container, #container-uiarea {
             height: 100%;
         }
+        #boot-placeholder {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            color: #555;
+        }
     </style>
+    <script>
+        // Safety net: if something throws before UI5 even gets a chance to
+        // render, show it on screen instead of leaving a silent blank page.
+        window.addEventListener("error", function (e) {
+            var el = document.getElementById("boot-placeholder");
+            if (el) {
+                el.innerHTML = "<h2 style='color:#b00'>Failed to load</h2><pre>" +
+                    (e.error && e.error.stack || e.message) + "</pre>";
+            }
+        });
+    </script>
     <script
         id="sap-ui-bootstrap"
         src="https://ui5.sap.com/1.150.0/resources/sap-ui-core.js"
@@ -30,6 +46,8 @@
         data-id="container"
         data-settings='{"id" : "accessportal.requestportal"}'
         data-handle-validation="true"
-    ></div>
+    >
+        <div id="boot-placeholder">Loading Request Access…</div>
+    </div>
 </body>
 </html>

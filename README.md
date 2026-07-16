@@ -51,7 +51,7 @@ That's exactly what's in this folder. Read on.
 access-portal/
 ├── app/
 │   ├── approvals/             ← manager-facing Fiori Elements app (list report + approve/reject)
-│   └── request-portal/        ← employee-facing Fiori Elements app (create + track requests)
+│   └── request-portal/        ← employee-facing freestyle UI5 app (submit + track requests)
 ├── db/
 │   ├── schema.cds          ← data model: Employees, Managers, Services, AccessRequests
 │   └── data/*.csv          ← seed data (one manager, one employee, "Discord" as a service)
@@ -66,15 +66,18 @@ access-portal/
 └── package.json
 ```
 
-Both `app/approvals` and `app/request-portal` are **the same underlying technology** — both generated with `@sap-ux/fiori-elements-writer` (the same tool BAS's Fiori Application Generator wizard uses), both List Report + Object Page apps pointed at the same `AccessRequests` entity. The only real difference is intent: the employee app leans on Fiori Elements' built-in **Create** flow (a straight entity insert with value-help pickers for Employee/Service), while the manager app leans on the **Approve/Reject** buttons (the bound actions in `access-portal-service.js`). I annotated `status`, `decidedAt`, `decidedBy`, `inviteLink`, and `decisionNote` as `@UI.ReadOnly` so they don't show up as editable fields on the employee's Create form — those only change through the approve/decline actions, not by someone typing into them directly.
+The two UI apps deliberately use **different technology**, matched to what each one needs:
+- **`app/approvals`** — a Fiori Elements app (generated with `@sap-ux/fiori-elements-writer`, the same tool BAS's Fiori Application Generator wizard uses). Metadata-driven: the List Report, columns, and Approve/Reject buttons all come from the annotations in `access-portal-service-ui.cds`, no hand-written UI code.
+- **`app/request-portal`** — a plain freestyle UI5 app (an XML view + a controller, no `sap.fe` templates). It needed to call the `submitRequest` *action* (which auto-creates an Employee record from a typed email, so a brand-new employee can self-register in one step) rather than doing a raw entity insert, and Fiori Elements' built-in Create flow can't call custom actions — it only knows how to POST directly to an entity set. A few lines of plain UI5 code sidesteps that limitation entirely.
 
-**One trade-off worth knowing:** the original design had a `submitRequest` *action* that auto-created an Employee record from a typed-in email/name (so a brand-new employee could self-register in one step). Fiori Elements' native Create doesn't call custom actions — it inserts the entity directly — so now the employee picks themselves from a **value-help list of existing Employees** rather than typing their email freehand. `submitRequest` still exists and still works (see the curl example below, or call it from your own future UI) — it's just not what the generated Create button uses. If someone isn't in the Employees list yet, add them first via `http://localhost:4004/$fiori-preview/AccessPortalService/Employees` (zero extra code, same trick as the AccessRequests preview) — a proper "register yourself" self-service flow is a good next feature once you're comfortable with what's here.
+Both are legitimate, common CAP/BTP patterns — which one fits depends on whether your screen maps cleanly onto "list + edit a record" (use Fiori Elements) or needs custom logic/flow (use freestyle UI5).
 
 **How a request flows, end to end (via the UI):**
-1. Employee opens `app/request-portal`, clicks **Create**, picks themselves and a service via value help, adds a reason, saves → a `Pending` `AccessRequests` row is created.
+1. Employee opens `app/request-portal`, fills in name/email, picks a service, adds a reason, clicks **Submit Request** → calls `submitRequest`, which finds-or-creates their Employee record and creates a `Pending` `AccessRequests` row.
 2. Manager opens `app/approvals`, sees the pending list, opens one, clicks **Approve** or **Reject**.
 3. `approve` handler: looks up the service → if it's "Discord", calls the Discord Bot REST API to mint a single-use, 7-day invite link → emails that link to the employee → marks the row `Approved`.
 4. `declineRequest` handler: marks the row `Rejected` and emails the employee why.
+5. Employee goes back to `app/request-portal`, re-enters their email, clicks **Refresh** under "My Requests" to see the updated status.
 
 I named the reject action `declineRequest` instead of `reject` — CAP's base service class already reserves the method name `reject` internally, and reusing it silently breaks your custom logic. Worth remembering as a gotcha.
 
@@ -96,8 +99,8 @@ You'll see `server listening on http://localhost:4004`. Then:
 
 - **See the data / try the API:** open `http://localhost:4004` — CAP lists every entity and service.
 - **The manager app:** `http://localhost:4004/approvals/webapp/index.html`
-- **The employee app:** `http://localhost:4004/request-portal/webapp/index.html` — click **Create**, pick yourself (Arun Employee, seeded by default) and "Discord" from the value-help pickers, add a reason, **Create**.
-- **Or simulate the employee screen via curl** (uses the `submitRequest` action instead, which also auto-creates the Employee record if the email doesn't exist yet):
+- **The employee app:** `http://localhost:4004/request-portal/webapp/index.html` — fill in the form, **Submit Request**, then enter the same email and click **Refresh** under "My Requests" once a manager has decided on it.
+- **Or simulate the employee screen via curl:**
   ```bash
   curl -X POST http://localhost:4004/access-portal/submitRequest \
     -H "Content-Type: application/json" \
